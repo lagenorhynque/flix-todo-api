@@ -1,4 +1,4 @@
-pub mod FlixToDoApi.Config {
+pub mod FlixToDoApi.Lib.Config {
     pub def port(): Option[Int32] \ Sys.Env =
         forM(
             portStr <- Sys.Env.getVar("PORT");

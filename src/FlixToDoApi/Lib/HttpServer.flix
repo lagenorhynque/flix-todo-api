@@ -1,5 +1,5 @@
-pub mod FlixToDoApi.HttpServer {
-    use FlixToDoApi.Http
+pub mod FlixToDoApi.Lib.HttpServer {
+    use FlixToDoApi.Lib.Http
     use Util.Json
     import com.sun.net.httpserver.{HttpExchange, HttpHandler, HttpServer}
     import java.lang.{Runtime, Thread}

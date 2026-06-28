@@ -1,6 +1,6 @@
-pub mod FlixToDoApi.Http {
+pub mod FlixToDoApi.Lib.Http {
     mod Route {
-        use FlixToDoApi.Http.{Method, Path, Request, Response}
+        use FlixToDoApi.Lib.Http.{Method, Path, Request, Response}
 
         pub enum Route(Method, Path, Request -> Response)
 
@@ -44,7 +44,7 @@ pub mod FlixToDoApi.Http {
     })
 
     mod Response {
-        use FlixToDoApi.Http.Body
+        use FlixToDoApi.Lib.Http.Body
 
         pub enum Response({
             status = Status,

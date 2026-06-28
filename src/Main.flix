@@ -1,11 +1,11 @@
-use FlixToDoApi.Config
-use FlixToDoApi.Http.Body
-use FlixToDoApi.Http.Method
-use FlixToDoApi.Http.Request.Request
-use FlixToDoApi.Http.Response.Response
-use FlixToDoApi.Http.Response.Status
-use FlixToDoApi.Http.Route.Route
-use FlixToDoApi.{HttpServer => Server}
+use FlixToDoApi.Lib.Config
+use FlixToDoApi.Lib.Http.Body
+use FlixToDoApi.Lib.Http.Method
+use FlixToDoApi.Lib.Http.Request.Request
+use FlixToDoApi.Lib.Http.Response.Response
+use FlixToDoApi.Lib.Http.Response.Status
+use FlixToDoApi.Lib.Http.Route.Route
+use FlixToDoApi.Lib.{HttpServer => Server}
 
 def main(): Unit \ {Chan, Sys.Env, IO, Logger, NonDet} =
     let port = Config.port() |> Option.getWithDefault(8888);
