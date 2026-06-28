@@ -39,15 +39,12 @@ pub mod FlixToDoApi.Db {
                 MutMap.put(id, ToDo.fromInput(id, input), db);
                 MutMap.get(id, db) |> Option.toOk(toDoNotFound(id)) |> resume
             }
-            def completeToDo(id, resume) = {
-                match MutMap.get(id, db) {
-                    case Some(ToDo.ToDo(x)) =>
-                        MutMap.put(id, ToDo.ToDo({isDone = true | x}), db);
-                        MutMap.get(id, db) |> Option.toOk(toDoNotFound(id))
-                    case _ => Err(toDoNotFound(id))
-                }
-                    |> resume
-            }
+            def completeToDo(id, resume) =
+                resume(forM(
+                    ToDo.ToDo(current) <- MutMap.get(id, db) |> Option.toOk(toDoNotFound(id));
+                    _ = MutMap.put(id, ToDo.ToDo({isDone = true | current}), db);
+                    updated <- MutMap.get(id, db) |> Option.toOk(toDoNotFound(id))
+                ) yield updated)
             def deleteToDo(id, resume) = {
                 MutMap.remove(id, db);
                 resume(Ok(true))
