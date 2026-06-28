@@ -40,13 +40,26 @@ pub mod FlixToDoApi.Http {
     pub enum Request({
         pathParams = Map[String, String],
         queryParams = Map[String, String],
-        body = String
+        body = Body
     })
 
     pub enum Response({
         status = ResponseStatusCode,
-        body = String
+        body = Body
     })
+
+    mod Body {
+        pub enum Body {
+            case PlainText(String)
+            case Json(Util.Json)
+        }
+
+        pub def contentType(body: Body): String =
+            match body {
+                case PlainText(_) => "text/plain"
+                case Json(_) => "application/json"
+            }
+    }
 
     mod ResponseStatusCode {
         pub enum ResponseStatusCode {

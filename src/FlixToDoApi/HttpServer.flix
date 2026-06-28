@@ -1,11 +1,11 @@
 pub mod FlixToDoApi.HttpServer {
-    import java.nio.charset.StandardCharsets
     use FlixToDoApi.Http
+    use Util.Json
     import com.sun.net.httpserver.{HttpExchange, HttpHandler, HttpServer}
     import java.lang.{Runtime, Thread}
     import java.lang.{String => JString}
     import java.net.InetSocketAddress
-    import java.nio.charset.Charset
+    import java.nio.charset.StandardCharsets
 
     pub def create(port: Int32): HttpServer \ IO =
         HttpServer.create(new InetSocketAddress(port), 0)
@@ -41,7 +41,7 @@ pub mod FlixToDoApi.HttpServer {
                             body = extractRequestBody(exchange)
                         });
                         Http.Route.requestHandler(route)(request),
-                    Http.Response.Response({status = Http.ResponseStatusCode.NotFound, body = "Not Found"}),
+                    Http.Response.Response({status = Http.ResponseStatusCode.NotFound, body = Http.Body.PlainText("Not Found")}),
                     findTargetRoute(requestMethod, requestPath, routes)
                 );
                 writeResponse(response, exchange)
@@ -84,15 +84,28 @@ pub mod FlixToDoApi.HttpServer {
             requestQuery
         )
 
-    def extractRequestBody(exchange: HttpExchange): String \ IO =
+    def extractRequestBody(exchange: HttpExchange): Http.Body \ IO =
         let is = exchange.getRequestBody();
-        new JString(is.readAllBytes(), StandardCharsets.UTF_8)
+        let s = new JString(is.readAllBytes(), StandardCharsets.UTF_8);
+        let contentType = exchange.getRequestHeaders().getFirst("Content-Type")
+            |> Object.toOption
+            |> Option.getWithDefault("text/plain");
+        match contentType {
+            case "application/json" =>
+                Json.parse(s) |> Result.getWithDefault(Json.JString("")) |> Http.Body.Json
+            case _ => Http.Body.PlainText(s)
+        }
 
     def writeResponse(response: Http.Response, exchange: HttpExchange): Unit \ IO =
             let Http.Response.Response({status, body}) = response;
-            exchange.sendResponseHeaders(Http.ResponseStatusCode.toInt(status), body |> String.length |> Int32.toInt64);
+            let bodyString = match body {
+                case Http.Body.PlainText(s) => s
+                case Http.Body.Json(j) => Json.toCompactString(j)
+            };
+            exchange.getResponseHeaders().set("Content-Type", Http.Body.contentType(body));
+            exchange.sendResponseHeaders(Http.ResponseStatusCode.toInt(status), bodyString |> String.length |> Int32.toInt64);
             let os = exchange.getResponseBody();
-            os.write(body.getBytes());
+            os.write(bodyString.getBytes());
             os.close()
 
     pub def start(server: HttpServer): Unit \ {Chan, IO, NonDet, Logger} =
