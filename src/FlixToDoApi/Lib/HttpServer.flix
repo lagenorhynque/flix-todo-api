@@ -10,13 +10,13 @@ pub mod FlixToDoApi.Lib.HttpServer {
     pub def create(port: Int32): HttpServer \ IO =
         HttpServer.create(new InetSocketAddress(port), 0)
 
-    pub def addRoutes(routes: List[Http.Route], server: HttpServer): HttpServer \ IO =
+    pub def addRoutes(routes: List[Http.Route[ef]], server: HttpServer): HttpServer \ IO =
         routes
             |> extractRoutes
             |> Map.forEach((k, v) -> discard server.createContext(k, v));
         server
 
-    def extractRoutes(routes: List[Http.Route]): Map[Http.Path, HttpHandler] \ IO =
+    def extractRoutes(routes: List[Http.Route[ef]]): Map[Http.Path, HttpHandler] \ IO =
         routes
             |> List.groupBy(Http.Route.path >> commonPath)
             |> List.toMapWith(rs ->
@@ -27,9 +27,9 @@ pub mod FlixToDoApi.Lib.HttpServer {
     def commonPath(path: Http.Path): Http.Path =
         path |> Regex.stripSuffix(regex"/\\{.+") |> Option.getWithDefault(path)
 
-    def buildHandler(routes: Nel[Http.Route]): HttpHandler \ IO =
+    def buildHandler(routes: Nel[Http.Route[ef]]): HttpHandler \ IO =
         new HttpHandler {
-            def handle(_this: HttpHandler, exchange: HttpExchange): Unit \ IO =
+            def handle(_this: HttpHandler, exchange: HttpExchange): Unit \ ef + IO =
                 let requestMethod = exchange.getRequestMethod() |> Http.Method.fromString;
                 let requestPath = exchange.getRequestURI().getPath();
                 let requestQuery = exchange.getRequestURI().getQuery() |> Object.toOption;
@@ -53,7 +53,7 @@ pub mod FlixToDoApi.Lib.HttpServer {
             |> String.toRegex
             |> Result.getWithDefault(Regex.unmatchable())
 
-    def findTargetRoute(requestMethod: Option[Http.Method], requestPath: String, routes: Nel[Http.Route]): Option[Http.Route] =
+    def findTargetRoute(requestMethod: Option[Http.Method], requestPath: String, routes: Nel[Http.Route[ef]]): Option[Http.Route[ef]] =
         Option.flatMap(
             m -> Nel.findLeft(
                 r -> m == Http.Route.method(r) and Regex.isMatch(r |> Http.Route.path |> pathPattern, requestPath),

@@ -2,17 +2,17 @@ pub mod FlixToDoApi.Lib.Http {
     mod Route {
         use FlixToDoApi.Lib.Http.{Method, Path, Request, Response}
 
-        pub enum Route(Method, Path, Request -> Response)
+        pub enum Route[ef: Eff](Method, Path, Request -> Response \ ef)
 
-        pub def method(r: Route): Method =
+        pub def method(r: Route[ef]): Method =
             let Route(m, _, _) = r;
             m
 
-        pub def path(r: Route): Path =
+        pub def path(r: Route[ef]): Path =
             let Route(_, p, _) = r;
             p
 
-        pub def requestHandler(r: Route): Request -> Response =
+        pub def requestHandler(r: Route[ef]): Request -> Response \ ef =
             let Route(_, _, h) = r;
             h
     }
@@ -45,6 +45,7 @@ pub mod FlixToDoApi.Lib.Http {
 
     mod Response {
         use FlixToDoApi.Lib.Http.Body
+        use Util.Json
 
         pub enum Response({
             status = Status,
@@ -52,7 +53,7 @@ pub mod FlixToDoApi.Lib.Http {
         })
 
         mod Status {
-            pub enum Status {
+            pub enum Status with Eq, ToString {
                 case Ok
                 case Created
                 case NoContent
@@ -69,6 +70,9 @@ pub mod FlixToDoApi.Lib.Http {
                     case Status.NotFound => 404
                 }
         }
+
+        pub def json(s: Status, x: a): Response with Json.ToJson[a] =
+            Response.Response({status = s, body = x |> Json.ToJson.toJson |> Body.Json})
     }
 
     mod Body {
@@ -81,6 +85,12 @@ pub mod FlixToDoApi.Lib.Http {
             match b {
                 case PlainText(_) => "text/plain"
                 case Json(_) => "application/json"
+            }
+
+        pub def json(b: Body): Option[Util.Json] =
+            match b {
+                case Json(j) => Some(j)
+                case _ => None
             }
     }
 }
