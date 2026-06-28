@@ -103,7 +103,8 @@ pub mod FlixToDoApi.Lib.HttpServer {
                 case Http.Body.Json(j) => Json.toCompactString(j)
             };
             exchange.getResponseHeaders().set("Content-Type", Http.Body.contentType(body));
-            exchange.sendResponseHeaders(Http.Response.Status.toCode(status), bodyString |> String.length |> Int32.toInt64);
+            let resLen = if (status == Http.Response.Status.NoContent) -1i64 else bodyString |> String.length |> Int32.toInt64;
+            exchange.sendResponseHeaders(Http.Response.Status.toCode(status), resLen);
             let os = exchange.getResponseBody();
             os.write(bodyString.getBytes());
             os.close()
