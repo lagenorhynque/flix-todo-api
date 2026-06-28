@@ -23,6 +23,9 @@ pub mod FlixToDoApi.View {
         let ToDo.ToDo({id, title, detail | _}) = toDo;
         ToDoView.ToDoView({id = id, title = title, detail = detail})
 
+    pub def empty(): Json =
+        JString("")
+
     pub enum ErrorView({
         detail = String
     })

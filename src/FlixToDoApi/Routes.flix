@@ -52,6 +52,59 @@ pub mod FlixToDoApi.Routes {
                         case Err(res) => res
                     }
                 } with Db.runWithInMemoryDb(db)
+            ),
+            Route(Method.Get, "/todos/{toDoId}", req ->
+                run {
+                    let Request({pathParams | _}) = req;
+                    let result = forM(
+                        id <- toDoId(pathParams);
+                        toDo <- Db.findById(id) |> Result.mapErr(s -> Response.json(Status.NotFound, ErrorView({detail = s})))
+                    ) yield toDo;
+                    match result {
+                        case Ok(toDos) => Response.json(Status.Ok, View.fromToDo(toDos))
+                        case Err(res) => res
+                    }
+                } with Db.runWithInMemoryDb(db)
+            ),
+            Route(Method.Put, "/todos/{toDoId}", req ->
+                run {
+                    let Request({pathParams, body | _}) = req;
+                    let result = forM(
+                        id <- toDoId(pathParams);
+                        input <- toDoInput(body);
+                        toDo <- Db.upsertToDo(id, input) |> Result.mapErr(s -> Response.json(Status.NotFound, ErrorView({detail = s})))
+                    ) yield toDo;
+                    match result {
+                        case Ok(_) => Response.json(Status.NoContent, View.empty())
+                        case Err(res) => res
+                    }
+                } with Db.runWithInMemoryDb(db)
+            ),
+            Route(Method.Delete, "/todos/{toDoId}", req ->
+                run {
+                    let Request({pathParams | _}) = req;
+                    let result = forM(
+                        id <- toDoId(pathParams);
+                        toDo <- Db.deleteToDo(id) |> Result.mapErr(s -> Response.json(Status.NotFound, ErrorView({detail = s})))
+                    ) yield toDo;
+                    match result {
+                        case Ok(_) => Response.json(Status.NoContent, View.empty())
+                        case Err(res) => res
+                    }
+                } with Db.runWithInMemoryDb(db)
+            ),
+            Route(Method.Put, "/todos/{toDoId}/completed", req ->
+                run {
+                    let Request({pathParams | _}) = req;
+                    let result = forM(
+                        id <- toDoId(pathParams);
+                        toDo <- Db.completeToDo(id) |> Result.mapErr(s -> Response.json(Status.NotFound, ErrorView({detail = s})))
+                    ) yield toDo;
+                    match result {
+                        case Ok(_) => Response.json(Status.NoContent, View.empty())
+                        case Err(res) => res
+                    }
+                } with Db.runWithInMemoryDb(db)
             )
         }
 
@@ -60,4 +113,10 @@ pub mod FlixToDoApi.Routes {
             json <- Body.json(body) |> Option.toOk(Response.json(Status.BadRequest, ErrorView({detail = "JSON body is necessary"})));
             input <- Util.Json.FromJson.fromJson(json) |> Result.mapErr(_ -> Response.json(Status.BadRequest, ErrorView({detail = "Invalid JSON"})))
         ) yield input
+
+    def toDoId(pathParams: Map[String, String]): Result[Response, Int32] =
+        forM(
+            idStr <- pathParams |> Map.get("toDoId") |> Option.toOk(Response.json(Status.BadRequest, ErrorView({detail = "To-do ID is necessary"})));
+            id <- Int32.fromString(idStr) |> Option.toOk(Response.json(Status.BadRequest, ErrorView({detail = "To-do ID must be integer"})))
+        ) yield id
 }
