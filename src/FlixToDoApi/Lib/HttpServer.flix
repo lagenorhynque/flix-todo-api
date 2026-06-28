@@ -13,7 +13,7 @@ pub mod FlixToDoApi.Lib.HttpServer {
     pub def addRoutes(routes: List[Http.Route[ef]], server: HttpServer): HttpServer \ IO =
         routes
             |> extractRoutes
-            |> Map.forEach((k, v) -> discard server.createContext(k, v));
+            |> Map.forEach((p, h) -> discard server.createContext(p, h));
         server
 
     def extractRoutes(routes: List[Http.Route[ef]]): Map[Http.Path, HttpHandler] \ IO =
@@ -41,7 +41,7 @@ pub mod FlixToDoApi.Lib.HttpServer {
                             body = extractRequestBody(exchange)
                         });
                         Http.Route.requestHandler(route)(request),
-                    Http.Response.Response({status = Http.Response.Status.NotFound, body = Http.Body.PlainText("Not Found")}),
+                    Http.Response.Response({status = Http.Response.Status.NotFound, body = Http.Body.PlainText("Route not found")}),
                     findTargetRoute(requestMethod, requestPath, routes)
                 );
                 writeResponse(response, exchange)

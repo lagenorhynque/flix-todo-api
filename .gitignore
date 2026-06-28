@@ -3,7 +3,7 @@
 .GITHUB_TOKEN
 artifact/
 build/
-lib/
+/lib/
 crash_report_*.txt
 
 # Visual Studio Code
