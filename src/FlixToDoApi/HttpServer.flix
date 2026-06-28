@@ -18,43 +18,71 @@ pub mod FlixToDoApi.HttpServer {
 
     def extractRoutes(routes: List[Http.Route]): Map[Http.Path, HttpHandler] \ IO =
         routes
-            |> List.groupBy(Http.Route.path)
+            |> List.groupBy(Http.Route.path >> commonPath)
             |> List.toMapWith(rs ->
-                let path = rs |> Nel.head |> Http.Route.path;
-                (path, buildHandler(path, rs))
+                let path = rs |> Nel.head |> Http.Route.path |> commonPath;
+                (path, buildHandler(rs))
             )
 
-    def buildHandler(_p: Http.Path, rs: Nel[Http.Route]): HttpHandler \ IO =
+    def commonPath(path: Http.Path): Http.Path =
+        path |> Regex.stripSuffix(regex"/\\{.+") |> Option.getWithDefault(path)
+
+    def buildHandler(routes: Nel[Http.Route]): HttpHandler \ IO =
         new HttpHandler {
             def handle(_this: HttpHandler, exchange: HttpExchange): Unit \ IO =
-                let method = exchange.getRequestMethod() |> Http.Method.fromString;
-                let path = exchange.getRequestURI().getPath();
+                let requestMethod = exchange.getRequestMethod() |> Http.Method.fromString;
+                let requestPath = exchange.getRequestURI().getPath();
+                let requestQuery = exchange.getRequestURI().getQuery() |> Object.toOption;
                 let response = Option.foldLeft(
                     (_, route) ->
-                        let request = extractRequest(exchange);
+                        let request = Http.Request.Request({
+                            pathParams = extractPathParams(requestPath, Http.Route.path(route)),
+                            queryParams = extractQueryParams(requestQuery),
+                            body = extractRequestBody(exchange)
+                        });
                         Http.Route.requestHandler(route)(request),
                     Http.Response.Response({status = Http.ResponseStatusCode.NotFound, body = "Not Found"}),
-                    findTargetRoute(method, path, rs)
+                    findTargetRoute(requestMethod, requestPath, routes)
                 );
                 writeResponse(response, exchange)
         }
 
-    def findTargetRoute(method: Option[Http.Method], path: Http.Path, routes: Nel[Http.Route]): Option[Http.Route] =
+    def pathPattern(path: Http.Path): Regex =
+        path
+            |> Regex.replace(src = regex"\\{.+?\\}", dst = "(.+?)")
+            |> String.toRegex
+            |> Result.getWithDefault(Regex.unmatchable())
+
+    def findTargetRoute(requestMethod: Option[Http.Method], requestPath: String, routes: Nel[Http.Route]): Option[Http.Route] =
         Option.flatMap(
-            m -> Nel.findLeft(r -> m == Http.Route.method(r) and path == Http.Route.path(r), routes),
-            method
+            m -> Nel.findLeft(
+                r -> m == Http.Route.method(r) and Regex.isMatch(r |> Http.Route.path |> pathPattern, requestPath),
+                routes
+            ),
+            requestMethod
         )
 
-    def extractRequest(exchange: HttpExchange): Http.Request \ IO =
-        Http.Request.Request({
-            pathParams = Map.empty(),
-            queryParams = Map.empty(),
-            body = extractRequestBody(exchange)
-        })
+    def extractPathParams(requestPath: String, path: Http.Path): Map[String, String] =
+        let pathPattern = pathPattern(path);
+        let paramKeys = Regex.submatches(regex"(?<=\\{).+?(?=\\})", path);
+        let paramValues = Regex.capture(pathPattern, requestPath);
+        List.zip(paramKeys, paramValues) |> List.toMap
 
-    // def extractPathParams(p: Http.Path): Map[String, String] = ???
-
-    // def extractQueryParams(p: Http.Path): Map[String, String] = ???
+    def extractQueryParams(requestQuery: Option[String]): Map[String, String] =
+        Option.foldLeft(
+            (_, queryString) ->
+                queryString
+                    |> Regex.split(regex"&")
+                    |> List.filterMap(entry ->
+                        match Regex.split(regex"=",entry) {
+                            case k :: v :: Nil => Some((k, v))
+                            case _ => None
+                        }
+                    )
+                    |> List.toMap,
+            Map.empty(),
+            requestQuery
+        )
 
     def extractRequestBody(exchange: HttpExchange): String \ IO =
         let is = exchange.getRequestBody();

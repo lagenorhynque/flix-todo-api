@@ -16,6 +16,10 @@ def main(): Unit \ {Chan, Sys.Env, IO, Logger, NonDet} =
             Route(Method.Post, "/echo", req ->
                 let Request({body | _}) = req;
                 Response({status = Status.Ok, body = body})
+            ),
+            Route(Method.Get, "/foo/{fooId}/bar/{barId}", req ->
+                let Request({pathParams, queryParams | _}) = req;
+                Response({status = Status.Ok, body = "pathParams=${pathParams}, queryParams=${queryParams}"})
             )
         })
         |> Server.start
