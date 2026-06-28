@@ -3,8 +3,8 @@ use FlixToDoApi.Http.Body
 use FlixToDoApi.Http.Method
 use FlixToDoApi.Http.Request.Request
 use FlixToDoApi.Http.Response.Response
+use FlixToDoApi.Http.Response.Status
 use FlixToDoApi.Http.Route.Route
-use FlixToDoApi.Http.{ResponseStatusCode => Status}
 use FlixToDoApi.{HttpServer => Server}
 
 def main(): Unit \ {Chan, Sys.Env, IO, Logger, NonDet} =

@@ -43,10 +43,33 @@ pub mod FlixToDoApi.Http {
         body = Body
     })
 
-    pub enum Response({
-        status = ResponseStatusCode,
-        body = Body
-    })
+    mod Response {
+        use FlixToDoApi.Http.Body
+
+        pub enum Response({
+            status = Status,
+            body = Body
+        })
+
+        mod Status {
+            pub enum Status {
+                case Ok
+                case Created
+                case NoContent
+                case BadRequest
+                case NotFound
+            }
+
+            pub def toCode(s: Status): Int32 =
+                match s {
+                    case Status.Ok => 200
+                    case Status.Created => 201
+                    case Status.NoContent => 204
+                    case Status.BadRequest => 400
+                    case Status.NotFound => 404
+                }
+        }
+    }
 
     mod Body {
         pub enum Body {
@@ -54,29 +77,10 @@ pub mod FlixToDoApi.Http {
             case Json(Util.Json)
         }
 
-        pub def contentType(body: Body): String =
-            match body {
+        pub def contentType(b: Body): String =
+            match b {
                 case PlainText(_) => "text/plain"
                 case Json(_) => "application/json"
-            }
-    }
-
-    mod ResponseStatusCode {
-        pub enum ResponseStatusCode {
-            case Ok
-            case Created
-            case NoContent
-            case BadRequest
-            case NotFound
-        }
-
-        pub def toInt(code: ResponseStatusCode): Int32 =
-            match code {
-                case ResponseStatusCode.Ok => 200
-                case ResponseStatusCode.Created => 201
-                case ResponseStatusCode.NoContent => 204
-                case ResponseStatusCode.BadRequest => 400
-                case ResponseStatusCode.NotFound => 404
             }
     }
 }

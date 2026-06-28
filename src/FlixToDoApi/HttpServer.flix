@@ -41,7 +41,7 @@ pub mod FlixToDoApi.HttpServer {
                             body = extractRequestBody(exchange)
                         });
                         Http.Route.requestHandler(route)(request),
-                    Http.Response.Response({status = Http.ResponseStatusCode.NotFound, body = Http.Body.PlainText("Not Found")}),
+                    Http.Response.Response({status = Http.Response.Status.NotFound, body = Http.Body.PlainText("Not Found")}),
                     findTargetRoute(requestMethod, requestPath, routes)
                 );
                 writeResponse(response, exchange)
@@ -103,7 +103,7 @@ pub mod FlixToDoApi.HttpServer {
                 case Http.Body.Json(j) => Json.toCompactString(j)
             };
             exchange.getResponseHeaders().set("Content-Type", Http.Body.contentType(body));
-            exchange.sendResponseHeaders(Http.ResponseStatusCode.toInt(status), bodyString |> String.length |> Int32.toInt64);
+            exchange.sendResponseHeaders(Http.Response.Status.toCode(status), bodyString |> String.length |> Int32.toInt64);
             let os = exchange.getResponseBody();
             os.write(bodyString.getBytes());
             os.close()
