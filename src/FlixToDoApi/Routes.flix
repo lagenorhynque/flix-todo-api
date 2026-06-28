@@ -27,35 +27,37 @@ pub mod FlixToDoApi.Routes {
             Route(Method.Get, "/todos", req ->
                 run {
                     let Request({queryParams | _}) = req;
-                    let result = Db.listToDos(
-                        queryParams |> Map.get("q"),
-                        queryParams |> Map.get("isDone") |> Option.map(s -> s == "true")
-                    );
+                    let result = forM(
+                        toDos <- Db.listToDos(
+                            queryParams |> Map.get("q"),
+                            queryParams |> Map.get("isDone") |> Option.map(s -> s == "true")
+                        ) |> Result.mapErr(s -> Response.json(Status.BadRequest, ErrorView({detail = s})))
+                    ) yield toDos;
                     match result {
                         case Ok(toDos) => Response.json(Status.Ok, List.map(View.fromToDo, toDos))
-                        case Err(s) => Response.json(Status.BadRequest, ErrorView({detail = s}))
+                        case Err(res) => res
                     }
                 } with Db.runWithInMemoryDb(db)
             ),
             Route(Method.Post, "/todos", req ->
                 run {
                     let Request({body | _}) = req;
-                    let toDoInput: Result[String, Input.ToDoInput] =
-                        forM(
-                            j <- Body.json(body) |> Option.toOk("JSON body is necessary");
-                            in <- (Util.Json.FromJson.fromJson(j) |> Result.mapErr(_ -> "Invalid JSON"))
-                        ) yield in;
-                    match toDoInput {
-                        case Ok(input) =>
-                            let result = Db.upsertToDo(Ref.get(idCounter), input);
-                            Ref.put(Ref.get(idCounter) + 1, idCounter);
-                            match result {
-                                case Ok(toDo) => Response.json(Status.Ok, View.fromToDo(toDo))
-                                case Err(s) => Response.json(Status.BadRequest, ErrorView({detail = s}))
-                            }
-                        case Err(s) => Response.json(Status.BadRequest, ErrorView({detail = s}))
+                    let result = forM(
+                        input <- toDoInput(body);
+                        toDo <- Db.upsertToDo(Ref.get(idCounter), input) |> Result.mapErr(s -> Response.json(Status.NotFound, ErrorView({detail = s})));
+                        _ = Ref.put(Ref.get(idCounter) + 1, idCounter)
+                    ) yield toDo;
+                    match result {
+                        case Ok(toDo) => Response.json(Status.Created, View.fromToDo(toDo))
+                        case Err(res) => res
                     }
                 } with Db.runWithInMemoryDb(db)
             )
         }
+
+    def toDoInput(body: Body): Result[Response, Input.ToDoInput] =
+        forM(
+            json <- Body.json(body) |> Option.toOk(Response.json(Status.BadRequest, ErrorView({detail = "JSON body is necessary"})));
+            input <- Util.Json.FromJson.fromJson(json) |> Result.mapErr(_ -> Response.json(Status.BadRequest, ErrorView({detail = "Invalid JSON"})))
+        ) yield input
 }
