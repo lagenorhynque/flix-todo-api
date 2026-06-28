@@ -49,7 +49,7 @@ pub mod FlixToDoApi.Lib.HttpServer {
 
     def pathPattern(path: Http.Path): Regex =
         path
-            |> Regex.replace(src = regex"\\{.+?\\}", dst = "(.+?)")
+            |> Regex.replace(src = regex"\\{.+?\\}", dst = "([^/]+?)")
             |> String.toRegex
             |> Result.getWithDefault(Regex.unmatchable())
 
