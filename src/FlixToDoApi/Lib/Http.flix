@@ -29,8 +29,8 @@ pub mod FlixToDoApi.Lib.Http {
             match s {
                 case "GET" => Some(Get)
                 case "POST" => Some(Post)
-                case "Put" => Some(Put)
-                case "Delete" => Some(Delete)
+                case "PUT" => Some(Put)
+                case "DELETE" => Some(Delete)
                 case _ => None
             }
     }
