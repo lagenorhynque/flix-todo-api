@@ -18,20 +18,8 @@ pub mod FlixToDoApi.Db {
         } with handler Db {
             def listToDos(q, isDone, resume) =
                 MutMap.valuesOf(db)
-                    |> List.filter(toDo ->
-                        let ToDo.ToDo({title, detail | _}) = toDo;
-                        Option.foldLeft(
-                            (_, searchQuery) ->
-                                String.contains(substr = searchQuery, title)
-                                or String.contains(substr = searchQuery, detail),
-                            true,
-                            q
-                        )
-                    )
-                    |> List.filter(toDo ->
-                        let ToDo.ToDo({isDone = targetIsDone | _}) = toDo;
-                        Option.foldLeft((_, done) -> targetIsDone == done, true, isDone)
-                    )
+                    |> List.filter(ToDo.matchesWithTitleOrDetail(q))
+                    |> List.filter(ToDo.matchesWithIsDone(isDone))
                     |> Ok
                     |> resume
             def findToDoById(id, resume) =
