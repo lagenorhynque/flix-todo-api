@@ -58,7 +58,7 @@ pub mod FlixToDoApi.Routes {
                     let Request({pathParams | _}) = req;
                     let result = forM(
                         id <- toDoId(pathParams);
-                        toDo <- Db.findById(id) |> Result.mapErr(s -> Response.json(Status.NotFound, ErrorView({detail = s})))
+                        toDo <- Db.findToDoById(id) |> Result.mapErr(s -> Response.json(Status.NotFound, ErrorView({detail = s})))
                     ) yield toDo;
                     match result {
                         case Ok(toDos) => Response.json(Status.Ok, View.fromToDo(toDos))

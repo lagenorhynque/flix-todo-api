@@ -5,7 +5,7 @@ pub mod FlixToDoApi.Db {
 
     pub eff Db {
         def listToDos(q: Option[String], isDone: Option[Bool]): Result[String, List[ToDo]]
-        def findById(id: Int32): Result[String, ToDo]
+        def findToDoById(id: Int32): Result[String, ToDo]
         def upsertToDo(id: Int32, input: Input.ToDoInput): Result[String, ToDo]
         def completeToDo(id: Int32): Result[String, ToDo]
         def deleteToDo(id: Int32): Result[String, Bool]
@@ -33,7 +33,7 @@ pub mod FlixToDoApi.Db {
                     )
                     |> Ok
                     |> resume
-            def findById(id, resume) =
+            def findToDoById(id, resume) =
                 MutMap.get(id, db) |> Option.toOk(toDoNotFound(id)) |> resume
             def upsertToDo(id, input, resume) = {
                 MutMap.put(id, ToDo.fromInput(id, input), db);
