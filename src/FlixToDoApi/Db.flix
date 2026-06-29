@@ -30,8 +30,8 @@ pub mod FlixToDoApi.Db {
             }
             def completeToDo(id, resume) =
                 resume(forM(
-                    ToDo.ToDo(current) <- MutMap.get(id, db) |> Option.toOk(toDoNotFound(id));
-                    _ = MutMap.put(id, ToDo.ToDo({isDone = true | current}), db);
+                    current <- MutMap.get(id, db) |> Option.toOk(toDoNotFound(id));
+                    _ = MutMap.put(id, ToDo.complete(current), db);
                     updated <- MutMap.get(id, db) |> Option.toOk(toDoNotFound(id))
                 ) yield updated)
             def deleteToDo(id, resume) = {

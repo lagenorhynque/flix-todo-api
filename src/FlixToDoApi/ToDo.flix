@@ -8,6 +8,22 @@ pub mod FlixToDoApi.ToDo {
         isDone = Bool
     })
 
+    instance Eq[ToDo] {
+        pub def eq(a: ToDo, b: ToDo): Bool =
+            let ToDo.ToDo({id = idA, title = titleA, detail = detailA, isDone = isDoneA}) = a;
+            let ToDo.ToDo({id = idB, title = titleB, detail = detailB, isDone = isDoneB}) = b;
+            idA == idB
+                and titleA == titleB
+                and detailA == detailB
+                and isDoneA == isDoneB
+    }
+
+    instance ToString[ToDo] {
+        pub def toString(a: ToDo): String =
+            let ToDo.ToDo({id, title, detail, isDone}) = a;
+            "ToDo({id = ${id}, title = ${title}, detail = ${detail}, isDone = ${isDone}})"
+    }
+
     pub def fromInput(id: ToDoId, input: ToDoInput): ToDo =
         let ToDoInput.ToDoInput({title, detail}) = input;
         ToDo.ToDo({id = id, title = title, detail = detail, isDone = false})
@@ -26,11 +42,12 @@ pub mod FlixToDoApi.ToDo {
         let ToDo.ToDo({isDone = targetIsDone | _}) = toDo;
         Option.foldLeft((_, done) -> targetIsDone == done, true, isDone)
 
-    mod ToDoId {
-        pub enum ToDoId(Int32) with Eq, Order
+    pub def complete(toDo: ToDo): ToDo =
+        let ToDo.ToDo(current) = toDo;
+        ToDo.ToDo({isDone = true | current})
 
-        pub def fromInt(id: Int32): ToDoId =
-            ToDoId(id)
+    mod ToDoId {
+        pub enum ToDoId(Int32) with Eq, Order, ToString
 
         pub def toInt(toDoId: ToDoId): Int32 =
             let ToDoId(id) = toDoId;
