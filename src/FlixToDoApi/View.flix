@@ -1,5 +1,6 @@
 pub mod FlixToDoApi.View {
     use FlixToDoApi.ToDo
+    use FlixToDoApi.ToDo.ToDoId
     use Util.Json
     use Util.Json.{JNumber, JObject, JString, ToJson}
 
@@ -21,7 +22,7 @@ pub mod FlixToDoApi.View {
 
     pub def fromToDo(toDo: ToDo): ToDoView =
         let ToDo.ToDo({id, title, detail | _}) = toDo;
-        ToDoView.ToDoView({id = id, title = title, detail = detail})
+        ToDoView.ToDoView({id = ToDoId.toInt(id), title = title, detail = detail})
 
     pub def empty(): Json =
         JString("")

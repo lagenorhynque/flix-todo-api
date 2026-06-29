@@ -2,16 +2,17 @@ pub mod FlixToDoApi.Db {
     use FlixToDoApi.Input
     use FlixToDoApi.Lib.Http.{Request, Response}
     use FlixToDoApi.ToDo
+    use FlixToDoApi.ToDo.ToDoId
 
     pub eff Db {
         def listToDos(q: Option[String], isDone: Option[Bool]): Result[String, List[ToDo]]
-        def findToDoById(id: Int32): Result[String, ToDo]
-        def upsertToDo(id: Int32, input: Input.ToDoInput): Result[String, ToDo]
-        def completeToDo(id: Int32): Result[String, ToDo]
-        def deleteToDo(id: Int32): Result[String, Bool]
+        def findToDoById(id: ToDoId): Result[String, ToDo]
+        def upsertToDo(id: ToDoId, input: Input.ToDoInput): Result[String, ToDo]
+        def completeToDo(id: ToDoId): Result[String, ToDo]
+        def deleteToDo(id: ToDoId): Result[String, Bool]
     }
 
-    pub def runWithInMemoryDb(db: MutMap[Int32, ToDo, r], f: Unit -> a \ ef): a \ (ef - Db) + r =
+    pub def runWithInMemoryDb(db: MutMap[ToDoId, ToDo, r], f: Unit -> a \ ef): a \ (ef - Db) + r =
         run {
             f()
         } with handler Db {
@@ -51,6 +52,6 @@ pub mod FlixToDoApi.Db {
             }
         }
 
-    def toDoNotFound(id: Int32): String =
-            "To-do#${id} is not found"
+    def toDoNotFound(id: ToDoId): String =
+            "To-do#${ToDoId.toInt(id)} is not found"
 }

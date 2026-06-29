@@ -8,6 +8,7 @@ pub mod FlixToDoApi.Routes {
     use FlixToDoApi.Lib.Http.Response.Status
     use FlixToDoApi.Lib.Http.Route.Route
     use FlixToDoApi.ToDo
+    use FlixToDoApi.ToDo.ToDoId
     use FlixToDoApi.View
     use FlixToDoApi.View.ErrorView.ErrorView
 
@@ -22,7 +23,7 @@ pub mod FlixToDoApi.Routes {
             )
         }
 
-    pub def apiRoutes(db: MutMap[Int32, ToDo, r], idCounter: Ref[Int32, r]): List[Route[r]] =
+    pub def apiRoutes(db: MutMap[ToDoId, ToDo, r], idCounter: Ref[Int32, r]): List[Route[r]] =
         List#{
             Route(Method.Get, "/todos", req ->
                 run {
@@ -44,7 +45,7 @@ pub mod FlixToDoApi.Routes {
                     let Request({body | _}) = req;
                     let result = forM(
                         input <- toDoInput(body);
-                        toDo <- Db.upsertToDo(Ref.get(idCounter), input) |> Result.mapErr(s -> Response.json(Status.NotFound, ErrorView({detail = s})));
+                        toDo <- Db.upsertToDo(idCounter |> Ref.get |> ToDoId.fromInt, input) |> Result.mapErr(s -> Response.json(Status.NotFound, ErrorView({detail = s})));
                         _ = Ref.put(Ref.get(idCounter) + 1, idCounter)
                     ) yield toDo;
                     match result {
@@ -114,9 +115,9 @@ pub mod FlixToDoApi.Routes {
             input <- Util.Json.FromJson.fromJson(json) |> Result.mapErr(_ -> Response.json(Status.BadRequest, ErrorView({detail = "Invalid JSON"})))
         ) yield input
 
-    def toDoId(pathParams: Map[String, String]): Result[Response, Int32] =
+    def toDoId(pathParams: Map[String, String]): Result[Response, ToDoId] =
         forM(
             idStr <- pathParams |> Map.get("toDoId") |> Option.toOk(Response.json(Status.BadRequest, ErrorView({detail = "To-do ID is necessary"})));
             id <- Int32.fromString(idStr) |> Option.toOk(Response.json(Status.BadRequest, ErrorView({detail = "To-do ID must be integer"})))
-        ) yield id
+        ) yield ToDoId.fromInt(id)
 }
