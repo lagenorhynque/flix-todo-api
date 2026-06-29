@@ -45,7 +45,7 @@ curl localhost:8888/todos -s -X POST -H 'Content-Type: application/json' -d '{"t
 }
 
 # List to-dos: after added
-curl -s localhost:8888/todos -s | jq
+curl localhost:8888/todos -s | jq
 [
   {
     "detail": "...",
