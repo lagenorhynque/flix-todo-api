@@ -1,6 +1,7 @@
 pub mod FlixToDoApi.Input {
     use Util.Json
-    use Util.Json.{FromJson, JsonError, ToJson}
+    use Util.Json.{FromJson, JsonError}
+
     pub enum ToDoInput({
         title = String,
         detail = String

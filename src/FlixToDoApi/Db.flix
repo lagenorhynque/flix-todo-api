@@ -1,6 +1,5 @@
 pub mod FlixToDoApi.Db {
     use FlixToDoApi.Input
-    use FlixToDoApi.Lib.Http.{Request, Response}
     use FlixToDoApi.ToDo
     use FlixToDoApi.ToDo.ToDoId
 
