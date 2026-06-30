@@ -40,5 +40,5 @@ pub mod FlixToDoApi.Db {
         }
 
     def toDoNotFound(id: ToDoId): String =
-            "To-do#${ToDoId.toInt(id)} is not found"
+        "To-do#${ToDoId.toInt(id)} is not found"
 }

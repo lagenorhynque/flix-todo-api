@@ -95,18 +95,18 @@ pub mod FlixToDoApi.Lib.HttpServer {
         else Http.Body.PlainText(s)
 
     def writeResponse(response: Http.Response, exchange: HttpExchange): Unit \ IO =
-            let Http.Response.Response({status, body}) = response;
-            let bodyString = match body {
-                case Http.Body.PlainText(s) => s
-                case Http.Body.Json(j) => Json.toCompactString(j)
-            };
-            let bodyBytes = bodyString.getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().set("Content-Type", Http.Body.contentType(body));
-            let resLen = if (status == Http.Response.Status.NoContent) -1i64 else bodyBytes |> Array.length |> Int32.toInt64;
-            exchange.sendResponseHeaders(Http.Response.Status.toCode(status), resLen);
-            let os = exchange.getResponseBody();
-            os.write(bodyBytes);
-            os.close()
+        let Http.Response.Response({status, body}) = response;
+        let bodyString = match body {
+            case Http.Body.PlainText(s) => s
+            case Http.Body.Json(j) => Json.toCompactString(j)
+        };
+        let bodyBytes = bodyString.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", Http.Body.contentType(body));
+        let resLen = if (status == Http.Response.Status.NoContent) -1i64 else bodyBytes |> Array.length |> Int32.toInt64;
+        exchange.sendResponseHeaders(Http.Response.Status.toCode(status), resLen);
+        let os = exchange.getResponseBody();
+        os.write(bodyBytes);
+        os.close()
 
     pub def start(server: HttpServer): Unit \ {Chan, IO, NonDet, Logger} =
         server.start();
