@@ -152,8 +152,7 @@ curl localhost:8888/todos -s | jq
   - query parameters:
     - `q`: query string
     - `isDone`: boolean
-- `GET /todos/{toDoId}`
-- `POST /todos/{toDoId}`
+- `POST /todos`
   - request body:
     ```json
     {
@@ -161,6 +160,7 @@ curl localhost:8888/todos -s | jq
       "detail": "..."
     }
     ```
+- `GET /todos/{toDoId}`
 - `PUT /todos/{toDoId}`
   - request body:
     ```json
